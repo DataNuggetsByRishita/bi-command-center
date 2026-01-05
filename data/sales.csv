@@ -1,0 +1,6 @@
+order_id,date,product,region,quantity,price,cost
+1,2024-01-01,Laptop,VIC,1,1200,900
+2,2024-01-02,Phone,NSW,2,800,500
+3,2024-01-03,Tablet,QLD,1,600,400
+4,2024-01-04,Laptop,NSW,1,1200,900
+5,2024-01-05,Phone,VIC,3,800,500

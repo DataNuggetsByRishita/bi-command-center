@@ -1,0 +1,286 @@
+# BI Command Center — Process Documentation
+
+## 1) Overview: What this project is
+
+BI Command Center is a small full-stack Business Intelligence dashboard that displays business metrics in a web UI.
+
+It has three main parts:
+
+1. Backend (FastAPI)  
+   A REST API that reads sales data, calculates KPIs, and returns results in JSON format.
+
+2. Frontend (Streamlit)  
+   A dashboard UI that calls the backend endpoints and visualizes the results as metrics and charts.
+
+3. Data layer (CSV for now)  
+   A `sales.csv` file stored in `data/` that simulates transactional data. The idea is that this can later be swapped out for a database such as PostgreSQL.
+
+The purpose of this project is to demonstrate an end-to-end analytics workflow:
+
+Raw data → data cleaning → KPI calculations → API responses → dashboard visualization
+
+---
+
+## 2) Tech stack used
+
+- Python (main programming language)
+- FastAPI (backend REST API)
+- Uvicorn (server that runs FastAPI locally)
+- Streamlit (frontend dashboard UI)
+- Pandas (reading data, cleaning, aggregations, KPI calculations)
+- Requests (frontend making API calls to backend)
+- Plotly (interactive charts in the dashboard)
+- Optional future upgrade: PostgreSQL + SQLAlchemy (replace CSV with a proper database)
+
+---
+
+## 3) Project structure and why it’s organised this way
+
+BI Command Center/
+├── backend/ # FastAPI backend (API endpoints)
+│ └── main.py
+├── frontend/ # Streamlit dashboard (UI)
+│ ├── app.py
+│ ├── styles.py
+│ └── assets/ # Background videos
+├── data/ # Data files (CSV now, DB later)
+│ └── sales.csv
+├── docs/ # Documentation (process notes, screenshots, roadmap)
+├── README.md
+└── .gitignore
+
+
+Why this structure:
+- `backend/` and `frontend/` are separated to keep responsibilities clean.
+- `data/` is kept independent so the backend can load data consistently.
+- `docs/` is where project notes, screenshots, and future roadmap items live.
+- `.gitignore` prevents uploading unnecessary files like the `venv/`.
+
+---
+
+## 4) What I built (step-by-step)
+
+### Step 1: Created the project folders
+
+I created a main project folder and added subfolders:
+
+- `backend/` for API code
+- `frontend/` for Streamlit dashboard code
+- `data/` for dataset files
+- `docs/` for documentation
+
+Why I did this:
+This mirrors how real projects are structured in companies and keeps the project organised as it grows.
+
+---
+
+### Step 2: Set up a Python virtual environment (venv)
+
+Command used:
+```bashh
+python3 -m venv venv
+source venv/bin/activate
+
+
+Why I did this:
+A virtual environment isolates dependencies so project installs don’t affect other Python projects on my system.
+
+Important note:
+The venv/ folder should not be pushed to GitHub (it can be recreated any time). That’s why it’s added to .gitignore.
+
+Step 3: Installed dependencies
+
+Installed packages required for the backend + frontend:
+
+Backend:
+
+fastapi
+
+uvicorn
+
+Frontend:
+
+streamlit
+
+requests
+
+Data processing and charts:
+
+pandas
+
+plotly
+
+Optional future packages (database upgrade):
+
+sqlalchemy
+
+psycopg2-binary
+
+Why I did this:
+Each package supports a different layer of the application:
+
+FastAPI handles the API routes
+
+Uvicorn runs the server
+
+Streamlit builds the UI
+
+Requests connects UI → API
+
+Pandas performs the data calculations
+
+Plotly creates interactive visuals
+
+Step 4: Built the backend health endpoint
+
+I created backend/main.py and added a basic endpoint:
+
+GET /health → returns:
+
+{ "status": "ok" }
+
+
+Why I did this:
+A health endpoint is the simplest way to confirm the backend server is running and reachable before building more complex features.
+
+How I tested it:
+I opened:
+
+http://127.0.0.1:8000/health
+
+
+and confirmed it returned the expected JSON.
+
+Step 5: Ran the backend server
+
+Command used:
+
+uvicorn backend.main:app --reload
+
+
+Why I used --reload:
+It automatically restarts the server when code changes, so I can develop faster without manually restarting.
+
+Step 6: Built the frontend dashboard and connected it to the backend
+
+I created frontend/app.py and built a Streamlit UI.
+
+The first thing the UI does is call the backend health endpoint:
+
+requests.get("http://127.0.0.1:8000/health")
+
+
+If the response is successful, Streamlit shows a green success message.
+
+Why I did this:
+Before displaying business data, the frontend should confirm that the backend is reachable. This prevents a confusing broken dashboard experience.
+
+How I ran it:
+
+streamlit run frontend/app.py
+
+
+How I tested it:
+Opened:
+
+http://localhost:8501
+
+
+and confirmed the page shows:
+“Backend status: ok”.
+
+Step 7: Added the sales dataset (CSV)
+
+I created:
+data/sales.csv
+
+This dataset simulates transactional business data.
+
+Why I used a CSV:
+CSV is simple for early development and makes it easy to build and test KPIs quickly. Later, the same logic can be moved to a database.
+
+Step 8: Created the KPI API endpoint (backend)
+
+I added a new endpoint:
+
+GET /kpis
+
+What it does:
+
+Reads the CSV using pandas
+
+Calculates:
+
+Total Sales = quantity × price
+
+Total Cost = quantity × cost
+
+Total Profit = total sales − total cost
+
+Total Orders = number of unique order IDs
+
+Returns KPIs in JSON format
+
+Example response shape:
+
+{
+  "total_sales": 7000.0,
+  "total_profit": 2300.0,
+  "total_orders": 5
+}
+
+
+Why this was important:
+KPIs are the core of most BI dashboards. This endpoint is the foundation for the rest of the dashboard metrics.
+
+Step 9: Fixed the JSON serialization bug
+
+Problem:
+Pandas calculations often return NumPy data types like numpy.int64 or numpy.float64.
+These can sometimes cause JSON serialization issues.
+
+Fix:
+Cast them into normal Python types before returning:
+
+float(total_sales)
+
+float(total_profit)
+
+int(total_orders)
+
+Why this matters:
+API responses must be clean JSON. Converting values makes the backend output reliable and prevents “Internal Server Error” issues.
+
+How I tested it:
+Opened:
+
+http://127.0.0.1:8000/kpis
+
+
+and confirmed it returned valid JSON with no server errors.
+
+5) Current outcome
+
+At this stage, the system works end-to-end:
+
+Backend is running and returns KPI data via an API
+
+Frontend is running and can confirm backend connectivity
+
+Data is loaded from CSV and metrics are calculated correctly
+
+The project is structured in a clean, scalable way
+
+6) Next improvements (future roadmap)
+
+Possible next upgrades:
+
+Add more endpoints for deeper analysis (region breakdown, product breakdown, trends)
+
+Replace CSV with PostgreSQL for a more realistic data layer
+
+Add authentication / config-based environment variables
+
+Add automated tests for API endpoints
+
+Deploy backend + frontend (Render / Railway / Streamlit Community Cloud)
